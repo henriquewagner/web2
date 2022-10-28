@@ -1,45 +1,38 @@
-import { Body, Controller, Delete, Get, Param, Put } from "@nestjs/common";
-import { INSTANCE_ID_SYMBOL } from "@nestjs/core/injector/instance-wrapper";
-import { runInThisContext } from "vm";
+import { Body, Controller, Get, Put, Param, Delete } from "@nestjs/typeorm";
+import { Tarefa } from './tarefa.entity'
+import { TarefaService } from './tarefa.service'
 
 @Controller()
-export class tarefaController {
+export class TarefaController {
+    
+    constructor (
+        private tarefaService: TarefaService
+    ) {}
 
-    // tarefaLista = ['tarefa 01', 'tarefa 02' ];
+    @Get('/tarefa') 
+    async listaTarefa():Promise<Tarefa[]> {
+        return await this.tarefaService.findAll();
+    }
 
-    tarefaLista = [];      //(codigo: '' , descrição)
+    @Get('/tarefa/:tarefaId')
+    async buscarPorCodigo(@Param() parametro) {
+        return await this.tarefaService.findById(parametro.codigo);
+    }
 
-    //@Get("/tarefa")
-    //listaTarefa() {
-    // return ['tarefa 01, tarefa 02'];
-    @Get("/tarefa")
-    listaTarefa() {
-        return this.tarefaLista
+    @Delete("/tarefa/:tarefaId")
+    async excluirTarefa(@Param() parametro) {
+        await this.tarefaService.excluir(parametro.codigo);
+        return "Deletado!"
     }
 
     @Put("/tarefa")
-    salvartarefa(@Body() tarefa) {
-        let index = this.tarefaLista.findIndex(t => t.codigo == tarefa.codigo);
-        if (index >= 0) {
-            this.tarefaLista[index].descricao = tarefa.descricao;
-        } else {
-            tarefa.codigo = Math.random().toString(36)
-            this.tarefaLista.push(tarefa);
-        }
-        return "ok";
+    async salvarTarefa(@Body() tarefa) {
+        await this.tarefaService.salvar(tarefa);
+        return "Ok!"
     }
-
-    @Get("/tarefa/:codigo")
-    buscarPorCodigo(@Param() parametro) {                       //Param = Significa parametro
-        console.log(parametro.codigo);                         // pega o codigo da url
-        let tarefa = this.tarefaLista.find(tarefa => tarefa.codigo == parametro.codigo);
-        return tarefa;
-    }
-
-    @Delete("/tarefa/:codigo")
-    excluirTarefa(@Param() parameto) {
-        let index = this.tarefaLista.findIndex(tarefa => tarefa.codigo == parameto.codigo);
-        this.tarefaLista.splice(index, 1);
-        return "ok";
+    @Get('/tarefa/remover/todos')
+    async removerTodos() {
+      
+      return 'Lista Removida com Sucesso!'
     }
 }
